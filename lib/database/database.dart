@@ -17,6 +17,8 @@ class DBHelper {
     return _db!;
   }
 
+// intialise the DataBase
+
   Future<Database> initDatabase() async {
     try {
       io.Directory documentDirectory = await getApplicationDocumentsDirectory();
