@@ -114,4 +114,31 @@ class DBHelper {
       rethrow;
     }
   }
+
+ Future<void> displayAllNotes() async {
+    try {
+      var dbClient = await db;
+      List<Map> list = await dbClient.rawQuery('SELECT * FROM notes');
+      for (var item in list) {
+        print(item);
+      }
+      log("Total notes: ${list.length}");
+    } catch (e) {
+      log("Error displaying notes: $e");
+    }
+  }
+
+  Future<String> getDatabasePath() async {
+    try {
+      io.Directory documentDirectory = await getApplicationDocumentsDirectory();
+      String path = join(documentDirectory.path, 'notes.db');
+      log("Database path: $path");
+      return path;
+    } catch (e) {
+      log("Error getting database path: $e");
+      rethrow;
+    }
+  }
+
+
 }
