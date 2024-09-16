@@ -22,8 +22,8 @@ class DBHelper {
       io.Directory documentDirectory = await getApplicationDocumentsDirectory();
       String path = join(documentDirectory.path, 'notes.db');
       var db = await openDatabase(
-        path, 
-        version: 1, 
+        path,
+        version: 1,
         onCreate: _onCreate,
         onOpen: (db) {
           log("Database opened successfully");
@@ -37,11 +37,11 @@ class DBHelper {
     }
   }
 
+// it will create the directory into the device
   Future<void> _onCreate(Database db, int version) async {
     try {
       await db.execute(
-        "CREATE TABLE notes (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, descriptions TEXT NOT NULL, date TEXT NOT NULL, timeago INTEGER NOT NULL)"
-      );
+          "CREATE TABLE notes (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, descriptions TEXT NOT NULL, date TEXT NOT NULL, timeago INTEGER NOT NULL)");
       log("Table created successfully");
     } catch (e) {
       log("Error creating table: $e");
@@ -49,6 +49,7 @@ class DBHelper {
     }
   }
 
+// create the DB entery
   Future<int> insert(NotesModel notesModel) async {
     try {
       var dbClient = await db;
@@ -61,14 +62,53 @@ class DBHelper {
     }
   }
 
+// retrive the DB entry
   Future<List<NotesModel>> getNotesList() async {
     try {
       var dbClient = await db;
-      final List<Map<String, dynamic>> queryResult = await dbClient.query('notes', orderBy: 'timeago DESC');
+      final List<Map<String, dynamic>> queryResult =
+          await dbClient.query('notes', orderBy: 'timeago DESC');
       log("Notes retrieved successfully: ${queryResult.length}");
       return queryResult.map((map) => NotesModel.fromMap(map)).toList();
     } catch (e) {
       log("Error retrieving notes: $e");
+      rethrow;
+    }
+  }
+
+// update DB entry
+  Future<int> updateNote(NotesModel notesModel) async {
+    try {
+      var dbClient = await db;
+      int result = await dbClient.update(
+        'notes',
+        notesModel.toMap(),
+        where: 'id = ?',
+        whereArgs: [notesModel.id],
+      );
+
+      log("Note updated successfully : $result");
+      return result;
+    } catch (e) {
+      log("Error updating note: $e");
+      rethrow;
+    }
+  }
+
+// delete DB entry
+  Future<int> deleteNote(int id) async {
+    try {
+      var dbClient = await db;
+      int result = await dbClient.delete(
+        'notes',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      log("Note deleted successfully: $result");
+      return result;
+    } catch (e) {
+      log("Error deleting note: $e");
       rethrow;
     }
   }

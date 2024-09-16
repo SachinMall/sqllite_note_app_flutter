@@ -11,18 +11,32 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  DBHelper? dbHelper;
-  Future<List<NotesModel>>? notesList;
+  final DBHelper dbHelper = DBHelper();
+  late Future<List<NotesModel>> notesList;
 
   @override
   void initState() {
-    dbHelper = DBHelper();
-    loadNotes();
     super.initState();
+    refreshNotes();
   }
 
-  loadNotes() {
-    notesList = dbHelper!.getNotesList();
+  void refreshNotes() {
+    setState(() {
+      notesList = dbHelper.getNotesList();
+    });
+  }
+
+
+  void editNote(NotesModel note) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddNotePage(noteToEdit: note),
+      ),
+    );
+    if (result == true) {
+      refreshNotes();
+    }
   }
 
   @override
@@ -33,7 +47,7 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         backgroundColor: Colors.lightBlueAccent,
       ),
-     body: FutureBuilder<List<NotesModel>>(
+      body: FutureBuilder<List<NotesModel>>(
         future: notesList,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -47,20 +61,86 @@ class _HomePageState extends State<HomePage> {
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
                 NotesModel note = snapshot.data![index];
-                return Card(
-                  elevation: 3,
-                  margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: ListTile(
-                    title: Text(
-                      note.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                return Dismissible(
+                  key: Key(note.id.toString()),
+                  background:
+                  
+                  Container(
+                     decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(.8),
+borderRadius: BorderRadius.circular(12)
                     ),
-                    subtitle: Text(
-                      note.descriptions,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.only(left: 20),
+                    margin: const EdgeInsets.only(left: 20),
+                    child: const Icon(Icons.edit, color: Colors.white),
+                  ),
+                  secondaryBackground: 
+
+                   Container(
+                    margin: const EdgeInsets.only(right: 20),
+                    decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(.8),
+borderRadius: BorderRadius.circular(12)
                     ),
-                    trailing: Text(note.date.split(' ')[0]), 
+                    alignment: Alignment.centerRight,
+                  
+                    padding: const EdgeInsets.only(right: 20),
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  confirmDismiss: (direction) async {
+                    if (direction == DismissDirection.endToStart) {
+                      // Delete the notes
+                      return await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Confirm"),
+                            content: const Text("Are you sure you want to delete this note?"),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: const Text("CANCEL"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                child: const Text("DELETE"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    } else if (direction == DismissDirection.startToEnd) {
+                      // Edit
+                      editNote(note);
+                      return false;
+                    }
+                    return false;
+                  },
+                  onDismissed: (direction) {
+                    if (direction == DismissDirection.endToStart) {
+                      dbHelper.deleteNote(note.id!);
+                      refreshNotes();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Note deleted")),
+                      );
+                    }
+                  },
+                  child: Card(
+                    elevation: 3,
+                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: ListTile(
+                      title: Text(
+                        note.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        note.descriptions,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: Text(note.date.split(' ')[0]),
+                    ),
                   ),
                 );
               },
@@ -77,12 +157,11 @@ class _HomePageState extends State<HomePage> {
             MaterialPageRoute(builder: (context) => const AddNotePage()),
           );
           if (result == true) {
-            setState(() {
-              loadNotes(); 
-            });
+            refreshNotes();
           }
         },
       ),
     );
   }
+
 }
