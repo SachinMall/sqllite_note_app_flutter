@@ -1,9 +1,8 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:sqllite_note_app_flutter/add_note.dart';
 import 'package:sqllite_note_app_flutter/database/database.dart';
+import 'package:sqllite_note_app_flutter/db_data_viewer.dart';
 import 'package:sqllite_note_app_flutter/model/notes_model.dart';
 
 class HomePage extends StatefulWidget {
@@ -28,7 +27,6 @@ class _HomePageState extends State<HomePage> {
       notesList = dbHelper.getNotesList();
     });
   }
-
 
   void editNote(NotesModel note) async {
     final result = await Navigator.push(
@@ -61,7 +59,8 @@ class _HomePageState extends State<HomePage> {
                 } else if (snapshot.hasError) {
                   return Center(child: Text("Error: ${snapshot.error}"));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text("No notes yet. Add your first note!"));
+                  return const Center(
+                      child: Text("No notes yet. Add your first note!"));
                 } else {
                   return ListView.builder(
                     itemCount: snapshot.data!.length,
@@ -69,28 +68,21 @@ class _HomePageState extends State<HomePage> {
                       NotesModel note = snapshot.data![index];
                       return Dismissible(
                         key: Key(note.id.toString()),
-                        background:
-                        
-                        Container(
-                           decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(.8),
-            borderRadius: BorderRadius.circular(12)
-                          ),
+                        background: Container(
+                          decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(.8),
+                              borderRadius: BorderRadius.circular(12)),
                           alignment: Alignment.centerLeft,
                           padding: const EdgeInsets.only(left: 20),
                           margin: const EdgeInsets.only(left: 20),
                           child: const Icon(Icons.edit, color: Colors.white),
                         ),
-                        secondaryBackground: 
-            
-                         Container(
+                        secondaryBackground: Container(
                           margin: const EdgeInsets.only(right: 20),
                           decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(.8),
-            borderRadius: BorderRadius.circular(12)
-                          ),
+                              color: Colors.red.withOpacity(.8),
+                              borderRadius: BorderRadius.circular(12)),
                           alignment: Alignment.centerRight,
-                        
                           padding: const EdgeInsets.only(right: 20),
                           child: const Icon(Icons.delete, color: Colors.white),
                         ),
@@ -102,14 +94,17 @@ class _HomePageState extends State<HomePage> {
                               builder: (BuildContext context) {
                                 return AlertDialog(
                                   title: const Text("Confirm"),
-                                  content: const Text("Are you sure you want to delete this note?"),
+                                  content: const Text(
+                                      "Are you sure you want to delete this note?"),
                                   actions: <Widget>[
                                     TextButton(
-                                      onPressed: () => Navigator.of(context).pop(false),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
                                       child: const Text("CANCEL"),
                                     ),
                                     TextButton(
-                                      onPressed: () => Navigator.of(context).pop(true),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
                                       child: const Text("DELETE"),
                                     ),
                                   ],
@@ -132,20 +127,28 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
                         },
-                        child: Card(
-                          elevation: 3,
-                          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                          child: ListTile(
-                            title: Text(
-                              note.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                        child: GestureDetector(
+                          onTap: () => Navigator.push(
+  context,
+  MaterialPageRoute(builder: (context) => DatabaseViewerScreen()),
+),
+                          child: Card(
+                            elevation: 3,
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 16),
+                            child: ListTile(
+                              title: Text(
+                                note.title,
+                                style:
+                                    const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                note.descriptions,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: Text(note.date.split(' ')[0]),
                             ),
-                            subtitle: Text(
-                              note.descriptions,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: Text(note.date.split(' ')[0]),
                           ),
                         ),
                       );
@@ -155,19 +158,16 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-           ElevatedButton(
-            onPressed: () async {
-              await dbHelper.displayAllNotes();
-              String path = await dbHelper.getDatabasePath();
-              log("Database path: $path");
-            },
-            child: const Text('Display Database Contents'),
-          ),
-    
+          //  ElevatedButton(
+          //   onPressed: () async {
+          //     await dbHelper.displayAllNotes();
+          //     String path = await dbHelper.getDatabasePath();
+          //     log("Database path: $path");
+          //   },
+          //   child: const Text('Display Database Contents'),
+          // ),
         ],
       ),
-      
-      
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blueAccent,
         child: const Icon(Icons.add),
@@ -183,5 +183,4 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 }
